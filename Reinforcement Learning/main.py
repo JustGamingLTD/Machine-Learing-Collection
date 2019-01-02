@@ -146,7 +146,7 @@ class GameRunner:
                 # prediction possible
                 current_q[action] = reward
             else:
-                current_q[action] = reward + GAMMA * np.amax(q_s_a_d[i])
+                current_q[action] = reward + 0.95 * np.amax(q_s_a_d[i])
             x[i] = state
             y[i] = current_q
         self._model.train_batch(self._sess, x, y)
