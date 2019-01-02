@@ -122,3 +122,29 @@ class GameRunner:
             return random.randint(0, self._model.num_actions - 1)
         else:
             return np.argmax(self._model.predict_one(state, self._sess))
+        
+    def _replay(self):
+        batch = self._memory.sample(self._model.batch_size)
+        states = np.array([val[0] for val in batch])
+        next_states = np.array([(np.zeros(self._model.num_states) if val[3] is None else val[3]) for val in batch])
+        # predict Q(s,a) given the batch of states
+        q_s_a = self._model.predict_batch(states, self._sess)
+        # predict Q(s',a') - so that we can do gamma * max(Q(s'a')) below
+        q_s_a_d = self._model.predict_batch(next_states, self._sess)
+        # setup training arrays
+        x = np.zeros((len(batch), self._model.num_states))
+        y = np.zeros((len(batch), self._model.num_actions))
+        for i, b in enumerate(batch):
+            state, action, reward, next_state = b[0], b[1], b[2], b[3]
+            # get the current q values for all actions in state
+            current_q = q_s_a[i]
+            # update the q value for action
+            if next_state is None:
+                # in this case, the game completed after action, so there is no max Q(s',a')
+                # prediction possible
+                current_q[action] = reward
+            else:
+                current_q[action] = reward + GAMMA * np.amax(q_s_a_d[i])
+            x[i] = state
+            y[i] = current_q
+        self._model.train_batch(self._sess, x, y)
