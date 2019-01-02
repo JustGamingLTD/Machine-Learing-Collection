@@ -1,3 +1,6 @@
+import tensorflow as tf
+import random
+
 class Model:
     def __init__(self, num_states, num_actions, batch_size):
         
