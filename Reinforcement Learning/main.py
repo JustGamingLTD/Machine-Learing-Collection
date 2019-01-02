@@ -162,7 +162,7 @@ if __name__ == "__main__":
     mem = Memory(50000)
 
     with tf.Session() as sess:
-        sess.run(model.var_init)
+        sess.run(model._var_init)
         gr = GameRunner(sess, model, env, mem, 0.9, 0.01,
                         LAMBDA)
         num_episodes = 300
