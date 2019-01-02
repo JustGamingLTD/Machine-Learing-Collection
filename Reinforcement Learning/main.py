@@ -121,7 +121,7 @@ class GameRunner:
         
     def _choose_action(self, state):
         if random.random() < self._eps:
-            return random.randint(0, self._model.num_actions - 1)
+            return random.randint(0, self._model._num_actions - 1)
         else:
             return np.argmax(self._model.predict_one(state, self._sess))
         
