@@ -105,7 +105,7 @@ class GameRunner:
 
             # exponentially decay the eps value
             self._steps += 1
-            self._eps = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * self._steps)
+            self._eps = 0.01 + (0.9 - 0.01) * math.exp(-0.9 * self._steps)
 
             # move the agent to the next state and accumulate the reward
             state = next_state
