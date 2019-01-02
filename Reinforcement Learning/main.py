@@ -2,6 +2,7 @@ import tensorflow as tf
 import random
 import gym
 import numpy as np
+import math
 
 class Model:
     def __init__(self, num_states, num_actions, batch_size):
