@@ -73,3 +73,52 @@ class GameRunner:
         self._steps = 0
         self._reward_store = []
         self._max_x_store = []
+        
+    def run(self):
+        state = self._env.reset()
+        tot_reward = 0
+        max_x = -100
+        while True:
+            if self._render:
+                self._env.render()
+
+            action = self._choose_action(state)
+            next_state, reward, done, info = self._env.step(action)
+            if next_state[0] >= 0.1:
+                reward += 10
+            elif next_state[0] >= 0.25:
+                reward += 20
+            elif next_state[0] >= 0.5:
+                reward += 100
+
+            if next_state[0] > max_x:
+                max_x = next_state[0]
+            # is the game complete? If so, set the next state to
+            # None for storage sake
+            if done:
+                next_state = None
+
+            self._memory.add_sample((state, action, reward, next_state))
+            self._replay()
+
+            # exponentially decay the eps value
+            self._steps += 1
+            self._eps = MIN_EPSILON + (MAX_EPSILON - MIN_EPSILON) * math.exp(-LAMBDA * self._steps)
+
+            # move the agent to the next state and accumulate the reward
+            state = next_state
+            tot_reward += reward
+
+            # if the game is done, break the loop
+            if done:
+                self._reward_store.append(tot_reward)
+                self._max_x_store.append(max_x)
+                break
+
+        print("Step {}, Total reward: {}, Eps: {}".format(self._steps, tot_reward, self._eps))
+        
+    def _choose_action(self, state):
+        if random.random() < self._eps:
+            return random.randint(0, self._model.num_actions - 1)
+        else:
+            return np.argmax(self._model.predict_one(state, self._sess))
