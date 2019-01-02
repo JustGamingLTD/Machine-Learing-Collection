@@ -158,12 +158,12 @@ if __name__ == "__main__":
     num_states = env.env.observation_space.shape[0]
     num_actions = env.env.action_space.n
 
-    model = Model(num_states, num_actions, BATCH_SIZE)
+    model = Model(num_states, num_actions, 50)
     mem = Memory(50000)
 
     with tf.Session() as sess:
         sess.run(model.var_init)
-        gr = GameRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
+        gr = GameRunner(sess, model, env, mem, 0.9, 0.01,
                         LAMBDA)
         num_episodes = 300
         cnt = 0
