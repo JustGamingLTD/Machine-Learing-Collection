@@ -6,7 +6,7 @@ class Model:
     def __init__(self, num_states, num_actions, batch_size):
         
         self._num_states = num_states
-        self._num_actions = num_actions
+        self.num_actions = num_actions
         self._batch_size = batch_size
         
         # define the placeholders
