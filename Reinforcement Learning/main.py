@@ -164,7 +164,7 @@ if __name__ == "__main__":
     with tf.Session() as sess:
         sess.run(model._var_init)
         gr = GameRunner(sess, model, env, mem, 0.9, 0.01,
-                        LAMBDA)
+                        0.9)
         num_episodes = 300
         cnt = 0
         while cnt < num_episodes:
