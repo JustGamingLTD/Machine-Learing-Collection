@@ -1,5 +1,6 @@
 import tensorflow as tf
 import random
+import gym
 
 class Model:
     def __init__(self, num_states, num_actions, batch_size):
@@ -148,3 +149,27 @@ class GameRunner:
             x[i] = state
             y[i] = current_q
         self._model.train_batch(self._sess, x, y)
+
+        
+if __name__ == "__main__":
+    env_name = 'MountainCar-v0'
+    env = gym.make(env_name)
+
+    num_states = env.env.observation_space.shape[0]
+    num_actions = env.env.action_space.n
+
+    model = Model(num_states, num_actions, BATCH_SIZE)
+    mem = Memory(50000)
+
+    with tf.Session() as sess:
+        sess.run(model.var_init)
+        gr = GameRunner(sess, model, env, mem, MAX_EPSILON, MIN_EPSILON,
+                        LAMBDA)
+        num_episodes = 300
+        cnt = 0
+        while cnt < num_episodes:
+            if cnt % 10 == 0:
+                print('Episode {} of {}'.format(cnt+1, num_episodes))
+            gr.run()
+            cnt += 1
+        
