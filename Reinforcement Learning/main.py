@@ -180,5 +180,5 @@ if __name__ == "__main__":
                 print('Episode {} of {}'.format(cnt+1, num_episodes))
             gr.run()
             cnt += 1
-        save_path = saver.save(sess, get_logs_path("./logs/model.ckpt"))
+        save_path = saver.save(sess, "./logs/model.ckpt")
         
