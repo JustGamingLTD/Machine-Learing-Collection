@@ -172,7 +172,7 @@ if __name__ == "__main__":
         #sess.run(model._var_init)
         saver.restore(sess, "./model.ckpt")
         gr = GameRunner(sess, model, env, mem, 0.9, 0.01,
-                        0.1, True)
+                        0.1, False)
         num_episodes = 150
         cnt = 0
         while cnt < num_episodes:
