@@ -3,6 +3,7 @@ import random
 import gym
 import numpy as np
 import math
+from clusterone import get_logs_path
 
 class Model:
     def __init__(self, num_states, num_actions, batch_size):
@@ -106,7 +107,7 @@ class GameRunner:
 
             # exponentially decay the eps value
             self._steps += 1
-            self._eps = 0.01 + (0.9 - 0.01) * math.exp(-0.01 * self._steps)
+            self._eps = 0.01 + (0.9 - 0.01) * math.exp(-self._decay * self._steps)
 
             # move the agent to the next state and accumulate the reward
             state = next_state
@@ -163,15 +164,21 @@ if __name__ == "__main__":
     model = Model(num_states, num_actions, 50)
     mem = Memory(50000)
 
+    saver = tf.train.Saver()
+
+    
     with tf.Session() as sess:
-        sess.run(model._var_init)
+        
+        #sess.run(model._var_init)
+        saver.restore(sess, "./model.ckpt")
         gr = GameRunner(sess, model, env, mem, 0.9, 0.01,
-                        0.9, False)
-        num_episodes = 300
+                        0.1, True)
+        num_episodes = 150
         cnt = 0
         while cnt < num_episodes:
             if cnt % 10 == 0:
                 print('Episode {} of {}'.format(cnt+1, num_episodes))
             gr.run()
             cnt += 1
+        save_path = saver.save(sess, get_logs_path("./model.ckpt"))
         
