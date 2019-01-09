@@ -1,6 +1,5 @@
 import tensorflow as tf
 import random
-import gym
 import numpy as np
 import math
 from clusterone import get_logs_path
@@ -38,7 +37,8 @@ class Model:
         self._var_init = tf.global_variables_initializer()
 
     def predict_one(self, state, sess):
-        return sess.run(self._logits, feed_dict={self._states:state.reshape(1, self._num_states)})
+        state = [state]
+        return sess.run(self._logits, feed_dict={self._states:state})
 
     def predict_batch(self, states, sess):
         return sess.run(self._logits, feed_dict={self._states: states})
@@ -85,18 +85,11 @@ class GameRunner:
         while True:
             if self._render:
                 self._env.render()
-
             action = self._choose_action(state)
-            next_state, reward, done, info = self._env.step(action)
-            if next_state[0] >= 0.1:
-                reward += 10
-            elif next_state[0] >= 0.25:
-                reward += 20
-            elif next_state[0] >= 0.5:
-                reward += 100
+            next_state, reward, done, info = self._env.step(action, False)
+            
 
-            if next_state[0] > max_x:
-                max_x = next_state[0]
+
             # is the game complete? If so, set the next state to
             # None for storage sake
             if done:
@@ -111,7 +104,7 @@ class GameRunner:
 
             # move the agent to the next state and accumulate the reward
             state = next_state
-            tot_reward += reward
+            tot_reward = reward
 
             # if the game is done, break the loop
             if done:
@@ -123,7 +116,7 @@ class GameRunner:
         
     def _choose_action(self, state):
         if random.random() < self._eps:
-            return random.randint(0, self._model._num_actions - 1)
+            return random.randint(0, self._model._num_actions - 1) == 1
         else:
             return np.argmax(self._model.predict_one(state, self._sess))
         
@@ -153,13 +146,46 @@ class GameRunner:
             y[i] = current_q
         self._model.train_batch(self._sess, x, y)
 
+class Game:
+    def __init__(self):
+        self.state = [0, 0]
+        self._step_count = 0
+        self._done = False
+
+    def step(self, action1, action2):
+        if action1 and action2:
+            s = [5, 5]
+            self.state = [x + y for x, y in zip(self.state, s)]
+
+        elif action1 and not action2:
+            s = [20, 0]
+            self.state = [x + y for x, y in zip(self.state, s)]
+
+        elif not action1 and action2:
+            s = [0, 20]
+            self.state = [x + y for x, y in zip(self.state, s)]
+
+        elif not action1 and not action2:
+            s = [3, 3]
+            self.state = [x + y for x, y in zip(self.state, s)]
+
+        self._step_count += 1
+        if(self._step_count == 20):
+            self._done = True
+        
+        return self.state, self.state[0], self._done, None
+
+    
+
+    def reset(self):
+        self.state = [0, 0]
+        self._step_count = 0
+        return self.state
         
 if __name__ == "__main__":
-    env_name = 'CartPole-v0'
-    env = gym.make(env_name)
 
-    num_states = env.env.observation_space.shape[0]
-    num_actions = env.env.action_space.n
+    num_states = 2
+    num_actions = 2
 
     model = Model(num_states, num_actions, 50)
     mem = Memory(50000)
@@ -169,11 +195,11 @@ if __name__ == "__main__":
     
     with tf.Session() as sess:
         
-        #sess.run(model._var_init)
-        saver.restore(sess, "./logs/model.ckpt")
-        gr = GameRunner(sess, model, env, mem, 0.9, 0.01,
-                        0.1, True)
-        num_episodes = 500
+        sess.run(model._var_init)
+        gr = GameRunner(sess, model, Game(), mem, 0.9, 0.01,
+                        0.1, False)
+
+        num_episodes = 15000
         cnt = 0
         while cnt < num_episodes:
             if cnt % 10 == 0:
@@ -181,4 +207,9 @@ if __name__ == "__main__":
             gr.run()
             cnt += 1
         save_path = saver.save(sess, "./logs/model.ckpt")
-        
+
+        saver.restore(sess, "./logs/model.ckpt")
+        gr = GameRunner(sess, model, Game(), mem, 0.9, 0.01,
+                        0.1, False)
+
+        print(gr._model.predict_one([3, 0], sess))
